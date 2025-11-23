@@ -223,7 +223,7 @@ class UserAdminWithProfile(UserAdmin):
     list_display = ('username', 'email', 'first_name', 'last_name', 'get_member_id', 'monthly_charge_checkbox', 'is_staff', 'is_active')
     list_filter = ('is_staff', 'is_superuser', 'is_active', 'groups')
     search_fields = ('username', 'first_name', 'last_name', 'email', 'userprofile__member_id')
-    actions = [mark_monthly_charges_paid]  # ✅ FIXED: Correct syntax
+    actions =  [mark_monthly_charges_paid]  # ✅ FIXED: Correct syntax
     
     def get_member_id(self, obj):
         try:
