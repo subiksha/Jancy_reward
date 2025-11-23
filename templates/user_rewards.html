@@ -1,0 +1,37 @@
+{% extends "user_base.html" %}
+{% block content %}
+
+<h5>Monthly Rewards</h5>
+<hr>
+
+<table class="highlight responsive-table">
+    <thead>
+        <tr>
+            <th>Month</th>
+            <th>Reward</th>
+            <th>Status</th>
+            <th>Unlocked At</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        {% for r in rewards %}
+        <tr>
+            <td>{{ r.month }}</td>
+            <td>{{ r.reward_text }}</td>
+            <td>
+                {% if r.is_unlocked %}
+                    <span class="green-text"><b>Unlocked</b></span>
+                {% else %}
+                    <span class="red-text"><b>Locked</b></span>
+                {% endif %}
+            </td>
+            <td>{{ r.unlocked_at|default:"—" }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="4">No rewards yet.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}

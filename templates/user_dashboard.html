@@ -1,0 +1,29 @@
+{% extends "user_base.html" %}
+{% block content %}
+
+<div class="row">
+
+    <div class="col s12 m6 l4">
+        <div class="card blue darken-1 white-text">
+            <h5>{{ scheme_name }}</h5>
+            <p>Scheme</p>
+        </div>
+    </div>
+
+    <div class="col s12 m6 l4">
+        <div class="card green darken-1 white-text">
+            <h5>₹{{ amount }}</h5>
+            <p>Investment Amount</p>
+        </div>
+    </div>
+
+    <div class="col s12 m6 l4">
+        <div class="card orange darken-1 white-text">
+            <h5>{{ unlocked_rewards }}</h5>
+            <p>Unlocked Rewards</p>
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}

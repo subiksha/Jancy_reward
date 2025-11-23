@@ -1,0 +1,35 @@
+{% extends "admin_base.html" %}
+{% block content %}
+
+<h4>Admin Dashboard</h4>
+
+<table class="highlight">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Member ID</th>
+            <th>Email</th>
+            <th>Scheme</th>
+            <th>Edit</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        {% for p in profiles %}
+        <tr>
+            <td>{{ p.user.first_name }} {{ p.user.last_name }}</td>
+            <td>{{ p.member_id }}</td>
+            <td>{{ p.user.email }}</td>
+            <td>{% if p.scheme %}{{ p.scheme.name }}{% else %}-{% endif %}</td>
+            <td>
+                <a href="/admin-user-profile/{{ p.user.id }}/" class="btn-small blue">
+                    Edit
+                </a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}
+

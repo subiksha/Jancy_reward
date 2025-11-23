@@ -1,0 +1,14 @@
+{% extends "user_base.html" %}
+{% block content %}
+
+<div class="card">
+    <h5>My Scheme</h5>
+    <hr>
+
+    <p><strong>Scheme:</strong> {{ scheme.name }}</p>
+    <p><strong>Amount:</strong> ₹{{ scheme.amount }}</p>
+    <p><strong>Monthly Reward:</strong> {{ scheme.monthly_reward_text }}</p>
+    <p><strong>Monthly Charge:</strong> ₹{{ scheme.monthly_charge }}</p>
+</div>
+
+{% endblock %}

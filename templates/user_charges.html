@@ -1,0 +1,37 @@
+{% extends "user_base.html" %}
+{% block content %}
+
+<h5>Monthly Charges</h5>
+<hr>
+
+<table class="highlight responsive-table">
+    <thead>
+        <tr>
+            <th>Month</th>
+            <th>Charge</th>
+            <th>Status</th>
+            <th>Paid At</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        {% for c in charges %}
+        <tr>
+            <td>{{ c.month }}</td>
+            <td>₹{{ c.charge_amount }}</td>
+            <td>
+                {% if c.status == "Paid" %}
+                    <span class="green-text"><b>Paid</b></span>
+                {% else %}
+                    <span class="red-text"><b>Pending</b></span>
+                {% endif %}
+            </td>
+            <td>{{ c.paid_at|default:"—" }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="4">No charges yet.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}

@@ -1,0 +1,211 @@
+{% extends "admin_base.html" %}
+{% block content %}
+
+<div class="card">
+  <h5>Member Accumulation Summary</h5>
+
+  <a href="/admin-members-summary/export/" class="btn blue right">
+    Export CSV
+  </a>
+
+  <div style="margin-top:20px;">
+    <!-- 🔍 SEARCH -->
+    <input id="searchInput" type="text" placeholder="Search members..." class="browser-default" />
+
+    <!-- 🔽 FILTER BY SCHEME -->
+    <select id="schemeFilter" class="browser-default" style="margin-top:10px;">
+      <option value="">All Schemes</option>
+      {% for m in members %}
+        <option value="{{ m.scheme }}">{{ m.scheme }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <br>
+
+  <table id="memberTable" class="striped highlight">
+    <thead>
+      <tr>
+        <th onclick="sortTable(0)">Name ⬍</th>
+        <th onclick="sortTable(1)">Member ID ⬍</th>
+        <th onclick="sortTable(2)">Scheme ⬍</th>
+        <th onclick="sortTable(3)">Join Date ⬍</th>
+        <th onclick="sortTable(4)">Charges Paid ⬍</th>
+        <th onclick="sortTable(5)">Rewards Received ⬍</th>
+        <th>View</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      {% for m in members %}
+      <tr>
+        <td>{{ m.name }}</td>
+        <td>{{ m.member_id }}</td>
+        <td>{{ m.scheme }}</td>
+        <td>{{ m.join_date }}</td>
+        <td>{{ m.charges_paid }}</td>
+        <td>{{ m.rewards_received }}</td>
+        <td>
+          <a href="/admin-member-summary/{{ m.member_id }}/" class="btn-small">View</a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- 📊 GRAPH AREA -->
+<div class="card">
+  <h5>Scheme-wise Summary Charts</h5>
+
+  <canvas id="schemeChargesChart" height="120"></canvas>
+  <canvas id="schemeRewardsChart" height="120" style="margin-top:40px;"></canvas>
+</div>
+
+<div class="card">
+  <h5>Monthly Overview</h5>
+
+  <canvas id="monthlyChargesChart" height="120"></canvas>
+  <canvas id="monthlyRewardsChart" height="120" style="margin-top:40px;"></canvas>
+</div>
+
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+/* ------------------------------
+   🔍 SEARCH FUNCTION
+-------------------------------- */
+document.getElementById("searchInput").addEventListener("keyup", function () {
+  let filter = this.value.toLowerCase();
+  let rows = document.querySelectorAll("#memberTable tbody tr");
+
+  rows.forEach(row => {
+    let text = row.innerText.toLowerCase();
+    row.style.display = text.includes(filter) ? "" : "none";
+  });
+});
+
+/* ------------------------------
+   🔽 SCHEME FILTER
+-------------------------------- */
+document.getElementById("schemeFilter").addEventListener("change", function () {
+  let value = this.value.toLowerCase();
+  let rows = document.querySelectorAll("#memberTable tbody tr");
+
+  rows.forEach(row => {
+    let scheme = row.children[2].innerText.toLowerCase();
+    row.style.display = (value === "" || scheme === value) ? "" : "none";
+  });
+});
+
+/* ------------------------------
+   🔼 SORTING FUNCTION
+-------------------------------- */
+function sortTable(col) {
+  let table = document.getElementById("memberTable");
+  let rows = Array.from(table.rows).slice(1);
+  let asc = table.getAttribute("data-sort") !== "asc";
+
+  rows.sort((a, b) => {
+    let A = a.cells[col].innerText;
+    let B = b.cells[col].innerText;
+    return asc ? A.localeCompare(B) : B.localeCompare(A);
+  });
+
+  table.setAttribute("data-sort", asc ? "asc" : "desc");
+
+  rows.forEach(r => table.tBodies[0].appendChild(r));
+}
+
+/* ------------------------------
+   📊 BUILD GRAPH DATA
+-------------------------------- */
+<script>
+const members = JSON.parse(`[
+  {% for m in members %}
+    {
+      "scheme": "{{ m.scheme }}",
+      "charges": "{{ m.charges_paid }}",
+      "rewards": "{{ m.rewards_received }}",
+      "join": "{{ m.join_date }}"
+    }{% if not forloop.last %},{% endif %}
+  {% endfor %}
+]`);
+</script>
+
+// Group data by scheme
+const schemeTotals = {};
+members.forEach(m => {
+  if (!schemeTotals[m.scheme]) {
+    schemeTotals[m.scheme] = { charges: 0, rewards: 0 };
+  }
+  schemeTotals[m.scheme].charges += m.charges;
+  schemeTotals[m.scheme].rewards += m.rewards;
+});
+
+const schemes = Object.keys(schemeTotals);
+const schemeCharges = schemes.map(s => schemeTotals[s].charges);
+const schemeRewards = schemes.map(s => schemeTotals[s].rewards);
+
+/* ------------------------------
+   📈 CHART: Scheme Charges
+-------------------------------- */
+new Chart(document.getElementById("schemeChargesChart"), {
+  type: "bar",
+  data: {
+    labels: schemes,
+    datasets: [{
+      label: "Total Charges Paid",
+      data: schemeCharges
+    }]
+  }
+});
+
+/* ------------------------------
+   🎁 CHART: Scheme Rewards
+-------------------------------- */
+new Chart(document.getElementById("schemeRewardsChart"), {
+  type: "bar",
+  data: {
+    labels: schemes,
+    datasets: [{
+      label: "Total Rewards Received",
+      data: schemeRewards
+    }]
+  }
+});
+
+/* ------------------------------
+   🗓 MONTHLY OVERVIEW
+-------------------------------- */
+
+// Generate dummy months based on join dates
+const months = [...new Set(members.map(m => m.join.substring(0, 7)))];
+
+const monthlyCharges = months.map(month =>
+  members.reduce((sum, m) => (m.join.startsWith(month) ? sum + m.charges : sum), 0)
+);
+
+const monthlyRewards = months.map(month =>
+  members.reduce((sum, m) => (m.join.startsWith(month) ? sum + m.rewards : sum), 0)
+);
+
+new Chart(document.getElementById("monthlyChargesChart"), {
+  type: "line",
+  data: {
+    labels: months,
+    datasets: [{ label: "Monthly Charges", data: monthlyCharges }]
+  }
+});
+
+new Chart(document.getElementById("monthlyRewardsChart"), {
+  type: "line",
+  data: {
+    labels: months,
+    datasets: [{ label: "Monthly Rewards", data: monthlyRewards }]
+  }
+});
+</script>
+
+{% endblock %}

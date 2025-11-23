@@ -1,0 +1,47 @@
+{% extends "admin_base.html" %}
+{% block content %}
+
+<h5>Monthly Charges</h5>
+<hr>
+
+<table class="highlight responsive-table">
+    <thead>
+        <tr>
+            <th>User</th>
+            <th>Scheme</th>
+            <th>Month</th>
+            <th>Amount</th>
+            <th>Status</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        {% for c in charges %}
+        <tr>
+            <td>{{ c.user.email }}</td>
+            <td>{{ c.scheme.name }}</td>
+            <td>{{ c.month }}</td>
+            <td>₹{{ c.charge_amount }}</td>
+            <td>
+                {% if c.status == "Paid" %}
+                    <span class="green-text"><b>Paid</b></span>
+                {% else %}
+                    <span class="red-text"><b>Pending</b></span>
+                {% endif %}
+            </td>
+            <td>
+                {% if c.status == "Pending" %}
+                <a href="/mark-charge-paid/{{ c.id }}/" class="btn-small green">
+                    <i class="material-icons left">check</i> Pay
+                </a>
+                {% else %}
+                <span class="grey-text">—</span>
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}

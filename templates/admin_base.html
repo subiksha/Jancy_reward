@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ title|default:"Dashboard" }}</title>
+
+    <!-- Materialize CSS (Material UI) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+
+    <!-- Material Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+    <style>
+        body {
+            display: flex;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        /* Sidebar */
+        #sidebar {
+            width: 250px;
+            background: #263238;
+            color: white;
+            padding-top: 20px;
+        }
+
+        #sidebar a {
+            color: white;
+            display: block;
+            padding: 15px;
+            border-bottom: 1px solid #37474f;
+        }
+
+        #sidebar a:hover {
+            background: #37474f;
+        }
+
+        /* Content area */
+        #content {
+            flex: 1;
+            padding: 20px;
+        }
+
+        .topbar {
+            padding: 10px;
+            background: white;
+            box-shadow: 0px 2px 5px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .card-stats {
+            padding: 20px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Sidebar -->
+    <div id="sidebar">
+        <h5 class="center-align">ADMIN</h5>
+
+        <a href="/admin-dashboard/"><i class="material-icons left">dashboard</i> Dashboard</a>
+
+        <a href="/admin/app/scheme/"><i class="material-icons left">layers</i> Schemes</a>
+
+        <a href="/admin-add-user/"><i class="material-icons left">person_add</i> Add User</a>
+
+        <a href="/admin/auth/user/"><i class="material-icons left">group</i> Users</a>
+
+        <a href="/admin-members-summary/"><i class="material-icons left">assessment</i> Accumulation Summary</a>
+
+        <a href="/admin/app/monthlycharge/"><i class="material-icons left">payment</i> Monthly Charges</a>
+
+        <a href="/admin/app/monthlyreward/"><i class="material-icons left">card_giftcard</i> Monthly Rewards</a>
+
+        <a href="/admin/app/userprofile/"><i class="material-icons left">person</i> User Profiles</a>
+
+        <a href="/admin/logout/"><i class="material-icons left">exit_to_app</i> Logout</a>
+</div>
+
+
+
+
+    <!-- Content -->
+    <div id="content">
+        <!-- Top Bar -->
+        <div class="topbar">
+            <span style="font-size: 22px;">{{ title|default:"Dashboard" }}</span>
+        </div>
+
+        {% block content %}
+        {% endblock %}
+    </div>
+
+</body>
+
+</html>

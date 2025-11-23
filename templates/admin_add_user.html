@@ -1,0 +1,28 @@
+{% extends "admin_base.html" %}
+
+{% block content %}
+
+<h4>Add User</h4>
+
+<form method="post">
+    {% csrf_token %}
+    
+    <div class="input-field">
+        <input type="text" name="first_name" required>
+        <label>First Name</label>
+    </div>
+
+    <div class="input-field">
+        <input type="text" name="last_name" required>
+        <label>Last Name</label>
+    </div>
+
+    <div class="input-field">
+        <input type="email" name="email" required>
+        <label>Email</label>
+    </div>
+
+    <button class="btn blue" type="submit">Create User</button>
+</form>
+
+{% endblock %}

@@ -1,0 +1,26 @@
+{% extends "user_base.html" %}
+{% block content %}
+
+<div class="card">
+    <h5>User Profile</h5>
+    <hr>
+
+    <p><strong>First Name:</strong> {{ user.first_name }}</p>
+    <p><strong>Last Name:</strong> {{ user.last_name }}</p>
+    <p><strong>Email:</strong> {{ user.email }}</p>
+
+    {% if scheme %}
+    <p><strong>Scheme:</strong> {{ scheme.name }}</p>
+    <p><strong>Amount:</strong> ₹{{ scheme.amount }}</p>
+    {% else %}
+    <p><em>No scheme assigned</em></p>
+    {% endif %}
+
+    <br>
+    <a href="/password_change/" class="btn blue">
+        <i class="material-icons left">lock</i>
+        Change Password
+    </a>
+</div>
+
+{% endblock %}

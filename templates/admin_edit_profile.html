@@ -1,0 +1,25 @@
+{% extends "admin_base.html" %}
+
+{% block content %}
+<h4>Edit User Profile</h4>
+
+<p><strong>User:</strong> {{ profile.user.first_name }} {{ profile.user.last_name }}</p>
+<p><strong>Member ID:</strong> {{ profile.member_id }}</p>
+
+<form method="post">
+    {% csrf_token %}
+    
+    <div class="input-field">
+        <select name="scheme" required>
+            <option value="" disabled selected>Select Scheme</option>
+            {% for s in schemes %}
+                <option value="{{ s.id }}" {% if profile.scheme == s %}selected{% endif %}>{{ s.name }}</option>
+            {% endfor %}
+        </select>
+        <label>Scheme</label>
+    </div>
+
+    <button class="btn blue">Save</button>
+</form>
+
+{% endblock %}

@@ -1,0 +1,38 @@
+{% extends "admin_base.html" %}
+{% block content %}
+
+<div class="card">
+    <h5>Members List</h5>
+
+    <a href="/admin-members/export/" class="btn blue right" style="margin-top:-40px;">
+        <i class="material-icons left">download</i>Export CSV
+    </a>
+
+    <br><br>
+
+    <table class="striped highlight">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Member ID</th>
+                <th>Scheme</th>
+                <th>Email</th>
+                <th>Last Reward Month</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for m in members %}
+            <tr>
+                <td>{{ m.name }}</td>
+                <td>{{ m.member_id }}</td>
+                <td>{{ m.scheme }}</td>
+                <td>{{ m.email }}</td>
+                <td>{{ m.last_reward }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% endblock %}

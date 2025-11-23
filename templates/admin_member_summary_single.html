@@ -1,0 +1,23 @@
+{% extends "admin_base.html" %}
+{% block content %}
+
+<div class="card">
+  <h5>Member Summary — {{ member_id }}</h5>
+
+  <a href="/admin-member-summary/{{ member_id }}/export/" class="btn blue right">
+    Export CSV
+  </a>
+
+  <br><br>
+
+  <table class="striped">
+    <tr><th>Name</th><td>{{ name }}</td></tr>
+    <tr><th>Member ID</th><td>{{ member_id }}</td></tr>
+    <tr><th>Scheme</th><td>{{ scheme }}</td></tr>
+    <tr><th>Join Date</th><td>{{ join_date }}</td></tr>
+    <tr><th>Total Charges Paid</th><td>{{ charges_paid }}</td></tr>
+    <tr><th>Total Rewards Received</th><td>{{ rewards_received }}</td></tr>
+  </table>
+</div>
+
+{% endblock %}
