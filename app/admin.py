@@ -1,11 +1,19 @@
+from calendar import month_name
+from django.forms.widgets import DateInput
+from django.contrib.auth.admin import UserAdmin
+from django.utils.html import format_html
+from django.utils.safestring import mark_safe
+from django.contrib import messages
+from django.db import transaction
+from django.utils import timezone
+from django.urls import path, reverse
 from django import forms
 from django.contrib import admin
 from django.contrib.auth.models import User
 from .models import UserProfile, Scheme, MonthlyCharge, MonthlyReward
-from django.forms.widgets import DateInput
-from .models import MonthlyCharge, MonthlyReward
-from django.contrib.auth.admin import UserAdmin
-
+from django.shortcuts import render, redirect
+from django.shortcuts import redirect
+from django.contrib import admin
 # --------------------------
 # USER PROFILE CUSTOM FORM
 # --------------------------
@@ -50,7 +58,98 @@ class UserProfileAdmin(admin.ModelAdmin):
         return True
 
 
-# --------------------------
+def mark_monthly_charges_paid(modeladmin, request, queryset):
+    """
+    Admin action to mark monthly charges as paid for selected users
+    """
+    current_month = timezone.now().replace(day=1)
+    month_name_str = month_name[current_month.month]
+    
+    with transaction.atomic():
+        created_charges = 0
+        created_rewards = 0
+        
+        for user in queryset:
+            # Get or create monthly charge
+            charge, charge_created = MonthlyCharge.objects.get_or_create(
+                user=user,
+                charge_month=current_month,
+                defaults={'paid': True}
+            )
+            
+            if charge_created:
+                created_charges += 1
+                
+                # Auto-create reward if user has a scheme
+                try:
+                    user_profile = user.userprofile
+                    if user_profile.scheme:
+                        MonthlyReward.objects.get_or_create(
+                            user=user,
+                            reward_month=current_month,
+                            defaults={
+                                'reward_text': user_profile.scheme.monthly_reward_text
+                            }
+                        )
+                        created_rewards += 1
+                except UserProfile.DoesNotExist:
+                    pass
+        
+        if created_charges > 0:
+            messages.success(
+                request, 
+                f'Successfully created {created_charges} monthly charges and {created_rewards} rewards for {month_name_str} {current_month.year}'
+            )
+        else:
+            messages.info(request, 'No new monthly charges were created (they may already exist)')
+
+mark_monthly_charges_paid.short_description = "Mark monthly charges as paid for current month"
+def mark_monthly_charges_paid(modeladmin, request, queryset):
+    """
+    Admin action to mark monthly charges as paid for selected users
+    """
+    current_month = timezone.now().replace(day=1)
+    month_name_str = month_name[current_month.month]
+    
+    with transaction.atomic():
+        created_charges = 0
+        created_rewards = 0
+        
+        for user in queryset:
+            # Get or create monthly charge
+            charge, charge_created = MonthlyCharge.objects.get_or_create(
+                user=user,
+                charge_month=current_month,
+                defaults={'paid': True}
+            )
+            
+            if charge_created:
+                created_charges += 1
+                
+                # Auto-create reward if user has a scheme
+                try:
+                    user_profile = user.userprofile
+                    if user_profile.scheme:
+                        MonthlyReward.objects.get_or_create(
+                            user=user,
+                            reward_month=current_month,
+                            defaults={
+                                'reward_text': user_profile.scheme.monthly_reward_text
+                            }
+                        )
+                        created_rewards += 1
+                except UserProfile.DoesNotExist:
+                    pass
+        
+        if created_charges > 0:
+            messages.success(
+                request, 
+                f'Successfully created {created_charges} monthly charges and {created_rewards} rewards for {month_name_str} {current_month.year}'
+            )
+        else:
+            messages.info(request, 'No new monthly charges were created (they may already exist)')
+
+mark_monthly_charges_paid.short_description = "Mark monthly charges as paid for current month"# --------------------------
 # MONTHLY REWARD CUSTOM FORM
 # --------------------------
 class MonthlyRewardAdminForm(forms.ModelForm):
@@ -178,13 +277,124 @@ class UserProfileInline(admin.StackedInline):
 # EXTENDED USER ADMIN WITH PROFILE
 class UserAdminWithProfile(UserAdmin):
     inlines = [UserProfileInline]
-    list_display = ('username', 'email', 'first_name', 'last_name', 'get_member_id', 'is_staff', 'is_active')
+    list_display = ('username', 'email', 'first_name', 'last_name', 'get_member_id', 'monthly_charge_checkbox', 'is_staff', 'is_active')
+    list_filter = ('is_staff', 'is_superuser', 'is_active', 'groups')
+    search_fields = ('username', 'first_name', 'last_name', 'email', 'userprofile__member_id')
+    actions = [mark_monthly_charges_paid]
     
     def get_member_id(self, obj):
         try:
             return obj.userprofile.member_id
         except UserProfile.DoesNotExist:
             return 'N/A'
+    get_member_id.short_description = 'Member ID'
+    
+    def monthly_charge_checkbox(self, obj):
+        """
+        Display a checkbox for monthly charge selection
+        """
+        current_month = timezone.now().replace(day=1)
+        
+        try:
+            charge = MonthlyCharge.objects.get(user=obj, charge_month=current_month)
+            if charge.paid:
+                return format_html(
+                    '<input type="checkbox" name="user_ids" value="{}" checked disabled> ✓ Paid',
+                    obj.id
+                )
+            else:
+                return format_html(
+                    '<input type="checkbox" name="user_ids" value="{}"> Pending',
+                    obj.id
+                )
+        except MonthlyCharge.DoesNotExist:
+            return format_html(
+                '<input type="checkbox" name="user_ids" value="{}"> Not Charged',
+                obj.id
+            )
+    monthly_charge_checkbox.short_description = 'Monthly Charges'
+    monthly_charge_checkbox.allow_tags = True
+    
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request)
+        return queryset.select_related('userprofile')
+    
+    def changelist_view(self, request, extra_context=None):
+        """
+        Override changelist_view to add custom button
+        """
+        extra_context = extra_context or {}
+        extra_context['monthly_charge_button'] = True
+        return super().changelist_view(request, extra_context)
+    
+    def get_urls(self):
+        """
+        Add custom URL for monthly charges processing
+        """
+        urls = super().get_urls()
+        custom_urls = [
+            path('mark-monthly-charges-paid/', self.admin_site.admin_view(self.mark_monthly_charges_paid_view), name='mark_monthly_charges_paid'),
+        ]
+        return custom_urls + urls
+    
+    def mark_monthly_charges_paid_view(self, request):
+        """
+        Custom view to handle monthly charges payment
+        """
+        if request.method == 'POST':
+            user_ids = request.POST.getlist('user_ids')
+            current_month = timezone.now().replace(day=1)
+            month_name_str = month_name[current_month.month]
+            
+            with transaction.atomic():
+                created_charges = 0
+                created_rewards = 0
+                
+                for user_id in user_ids:
+                    try:
+                        user = User.objects.get(id=user_id)
+                        
+                        # Get or create monthly charge
+                        charge, charge_created = MonthlyCharge.objects.get_or_create(
+                            user=user,
+                            charge_month=current_month,
+                            defaults={'paid': True}
+                        )
+                        
+                        if charge_created:
+                            created_charges += 1
+                            
+                            # Auto-create reward if user has a scheme
+                            try:
+                                user_profile = user.userprofile
+                                if user_profile.scheme:
+                                    MonthlyReward.objects.get_or_create(
+                                        user=user,
+                                        reward_month=current_month,
+                                        defaults={
+                                            'reward_text': user_profile.scheme.monthly_reward_text
+                                        }
+                                    )
+                                    created_rewards += 1
+                            except UserProfile.DoesNotExist:
+                                pass
+                    
+                    except User.DoesNotExist:
+                        continue
+                
+                if created_charges > 0:
+                    messages.success(
+                        request, 
+                        f'Successfully created {created_charges} monthly charges and {created_rewards} rewards for {month_name_str} {current_month.year}'
+                    )
+                else:
+                    messages.info(request, 'No new monthly charges were created')
+        
+        return redirect('admin:auth_user_changelist')
+    
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request)
+        return queryset.select_related('userprofile')
     get_member_id.short_description = 'Member ID'
 # --------------------------
 # REGISTER MODELS (after classes!)

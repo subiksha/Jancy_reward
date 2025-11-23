@@ -26,7 +26,7 @@ MIDDLEWARE=[
 ROOT_URLCONF='core.urls'
 TEMPLATES=[{
  'BACKEND':'django.template.backends.django.DjangoTemplates',
- 'DIRS':[BASE_DIR/'templates'],
+ 'DIRS':[BASE_DIR/'templates'],  # Make sure this line exists
  'APP_DIRS':True,
  'OPTIONS':{'context_processors':[
   'django.template.context_processors.debug',
