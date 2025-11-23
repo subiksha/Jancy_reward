@@ -4,7 +4,7 @@ from django.contrib.auth.models import User
 from .models import UserProfile, Scheme, MonthlyCharge, MonthlyReward
 from django.forms.widgets import DateInput
 from .models import MonthlyCharge, MonthlyReward
-
+from django.contrib.auth.admin import UserAdmin
 
 # --------------------------
 # USER PROFILE CUSTOM FORM
@@ -148,12 +148,52 @@ class MonthlyChargeAdminForm(forms.ModelForm):
 class MonthlyChargeAdmin(admin.ModelAdmin):
     form = MonthlyChargeAdminForm
     list_display = ("user", "charge_month", "paid", "created_at")
+# CUSTOM USER ADMIN WITH MEMBER ID
+class CustomUserAdmin(UserAdmin):
+    list_display = ('username', 'email', 'first_name', 'last_name', 'get_member_id', 'is_staff', 'is_active')
+    list_filter = ('is_staff', 'is_superuser', 'is_active', 'groups')
+    search_fields = ('username', 'first_name', 'last_name', 'email', 'userprofile__member_id')
+    
+    def get_member_id(self, obj):
+        try:
+            return obj.userprofile.member_id
+        except UserProfile.DoesNotExist:
+            return 'N/A'
+    get_member_id.short_description = 'Member ID'
+    
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request)
+        return queryset.select_related('userprofile')
 
+
+# USER PROFILE INLINE FOR USER ADMIN
+class UserProfileInline(admin.StackedInline):
+    model = UserProfile
+    can_delete = False
+    verbose_name_plural = 'User Profile'
+    readonly_fields = ('member_id',)
+    fields = ('member_id', 'scheme')
+
+
+# EXTENDED USER ADMIN WITH PROFILE
+class UserAdminWithProfile(UserAdmin):
+    inlines = [UserProfileInline]
+    list_display = ('username', 'email', 'first_name', 'last_name', 'get_member_id', 'is_staff', 'is_active')
+    
+    def get_member_id(self, obj):
+        try:
+            return obj.userprofile.member_id
+        except UserProfile.DoesNotExist:
+            return 'N/A'
+    get_member_id.short_description = 'Member ID'
 # --------------------------
 # REGISTER MODELS (after classes!)
 # --------------------------
+# Unregister default User admin and register custom one
+admin.site.unregister(User)
+admin.site.register(User, UserAdminWithProfile)
+
 admin.site.register(Scheme)
 admin.site.register(UserProfile, UserProfileAdmin)
 admin.site.register(MonthlyCharge, MonthlyChargeAdmin)
 admin.site.register(MonthlyReward, MonthlyRewardAdmin)
-

@@ -31,9 +31,17 @@ class UserProfile(models.Model):
     scheme = models.ForeignKey(Scheme, on_delete=models.SET_NULL, null=True)
     member_id = models.CharField(max_length=20, unique=True, blank=True)
 
+    def save(self, *args, **kwargs):
+        # Generate member ID if it doesn't exist
+        if not self.member_id:
+            self.member_id = generate_member_id()
+            # Ensure uniqueness
+            while UserProfile.objects.filter(member_id=self.member_id).exists():
+                self.member_id = generate_member_id()
+        super().save(*args, **kwargs)
+
     def __str__(self):
         return f"{self.user.username} ({self.member_id})"
-    
 
 # --------------------------
 # Monthly Charge
