@@ -20,6 +20,38 @@ from app.models import (
 
 from app.utils import generate_monthly_entries
 
+from django.shortcuts import redirect
+from django.contrib.auth.decorators import login_required
+from datetime import date
+
+from .models import UserProfile, MonthlyCharge, MonthlyReward
+
+@login_required
+def quick_mark_paid(request, user_id):
+    if not request.user.is_superuser:
+        return redirect("/")
+
+    today_month = date.today().replace(day=1)
+
+    user = User.objects.get(id=user_id)
+    profile = user.userprofile
+
+    charge, created = MonthlyCharge.objects.get_or_create(
+        user=user,
+        charge_month=today_month,
+        defaults={"paid": True}
+    )
+
+    charge.paid = True
+    charge.save()
+
+    MonthlyReward.objects.update_or_create(
+        user=user,
+        reward_month=today_month,
+        defaults={"reward_text": profile.scheme.monthly_reward_text}
+    )
+
+    return redirect("/admin/auth/user/")
 
 # ---------------------------------------------------
 # PUBLIC PAGES

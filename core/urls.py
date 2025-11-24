@@ -74,6 +74,9 @@ urlpatterns = [
         name='password_change_done'
     ),
 ]
+from app.views import quick_mark_paid
+
+path("admin/mark-paid/<int:user_id>/", quick_mark_paid),
 # Password Reset URLs
 path("password-reset/", 
      auth_views.PasswordResetView.as_view(template_name="password_reset.html"), 
